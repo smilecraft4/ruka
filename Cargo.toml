@@ -1,0 +1,18 @@
+[package]
+name = "ruka"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.3", features = ["derive"] }
+rustube = "0.6"
+tokio = { version = "1", features = ["full"] }
+mini-redis = "0.4.1"
+serde = "1.0"
+serde_json = "1.0"
+rsmpeg = { version = "0.14.1", features = ["link_system_ffmpeg"] }
+reqwest = { version = "0.11.18", features = ["stream"] }
+anyhow = "1.0.75"
+futures-util = "0.3.28"
