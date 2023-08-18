@@ -1382,6 +1382,7 @@ dependencies = [
  "rustube",
  "serde",
  "serde_json",
+ "thiserror",
  "tokio",
 ]
 

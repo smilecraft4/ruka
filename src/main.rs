@@ -26,7 +26,6 @@ struct Args {
     cover: Option<String>,
 }
 
-use anyhow::Result;
 use ffmpeg::{codec, ffi::AVFormatContext, filter, format, frame};
 use std::{ffi::c_void, io::Read, path::Path};
 
