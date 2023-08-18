@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+// TODO: Remove link
 const PATH: &str = "examples/data/triples - girls' capitalism (official audio)";
 
 const OUT_EXTENSIONS: &str = ".wav";
