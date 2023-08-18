@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cargo",
+            "command": "build",
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "group": "build",
+            "label": "rust: cargo build",
+            "env": {
+                "FFMPEG_DIR": "C:/src/vcpkg/installed/x64-windows/"
+            }
+        },
+        {
+            "type": "cargo",
+            "command": "run",
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "label": "rust: cargo run",
+            "dependsOn": "rust: cargo build",
+            "args": [
+                "--",
+                "-u",
+                "https://www.youtube.com/watch?v=kPDuOqtnivk"
+            ]
+        }
+    ]
+}

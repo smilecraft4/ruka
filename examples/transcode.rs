@@ -1,33 +1,12 @@
-#![allow(unused)]
-
 extern crate ffmpeg_next as ffmpeg;
 
-use clap::Parser;
-use ffmpeg::{format::context::Input, media, software::resampler};
-use futures_util::StreamExt;
-use rustube::*;
-use std::{
-    io::{self, prelude::*, stdout},
-    ops::Deref,
-    path::PathBuf,
-};
-
-#[derive(Parser, Debug)]
-#[command(name = "smilecraft4", version = "0.0.1", about = "youtube to mp3")]
-struct Args {
-    #[arg(short, long)]
-    url: Option<String>,
-    #[arg(short, long)]
-    output: Option<String>,
-    #[arg(short, long)]
-    metadata: Option<String>,
-    #[arg(short, long)]
-    cover: Option<String>,
-}
-
 use anyhow::Result;
-use ffmpeg::{codec, ffi::AVFormatContext, filter, format, frame};
-use std::{ffi::c_void, io::Read, path::Path};
+use ffmpeg::{codec, ffi::AVFormatContext, filter, format, frame, media};
+use std::{
+    ffi::c_void,
+    io::Read,
+    path::{Path, PathBuf},
+};
 
 const PATH: &str = "examples/data/triples - girls' capitalism (official audio)";
 
@@ -99,22 +78,21 @@ fn transcoder<P: AsRef<Path>>(
         .streams()
         .best(media::Type::Audio)
         .expect("could not find best audio stream");
-    let context = ffmpeg::codec::context::Context::from_parameters(input.parameters()).unwrap();
-    let mut decoder = context.decoder().audio().unwrap();
+    let context = ffmpeg::codec::context::Context::from_parameters(input.parameters())?;
+    let mut decoder = context.decoder().audio()?;
     let codec = ffmpeg::encoder::find(octx.format().codec(path, media::Type::Audio))
         .expect("failed to find encoder")
-        .audio()
-        .unwrap();
+        .audio()?;
     let global = octx
         .format()
         .flags()
         .contains(ffmpeg::format::flag::Flags::GLOBAL_HEADER);
 
-    decoder.set_parameters(input.parameters()).unwrap();
+    decoder.set_parameters(input.parameters())?;
 
-    let mut output = octx.add_stream(codec).unwrap();
-    let context = ffmpeg::codec::context::Context::from_parameters(output.parameters()).unwrap();
-    let mut encoder = context.encoder().audio().unwrap();
+    let mut output = octx.add_stream(codec)?;
+    let context = ffmpeg::codec::context::Context::from_parameters(output.parameters())?;
+    let mut encoder = context.encoder().audio()?;
 
     let channel_layout = codec
         .channel_layouts()
@@ -145,10 +123,10 @@ fn transcoder<P: AsRef<Path>>(
     encoder.set_time_base((1, decoder.rate() as i32));
     output.set_time_base((1, decoder.rate() as i32));
 
-    let encoder = encoder.open_as(codec).unwrap();
+    let encoder = encoder.open_as(codec)?;
     output.set_parameters(&encoder);
 
-    let filter = filter(filter_spec, &decoder, &encoder).unwrap();
+    let filter = filter(filter_spec, &decoder, &encoder)?;
 
     let in_time_base = decoder.time_base();
     let out_time_base = output.time_base();
@@ -282,110 +260,27 @@ fn read_file_to_buffer(file_path: &str) -> Result<Vec<u8>> {
     Ok(buffer)
 }
 
-#[tokio::main]
-async fn main() {
-    let args = Args::parse();
-
-    let url = args
-        .url
-        .unwrap_or(String::from("https://www.youtube.com/watch?v=DSm9qiBTStk"));
-
-    println!("Hello {}", url);
-    println!("Hello {}", args.metadata.unwrap_or(String::from("None")));
-    println!("Hello {}", args.cover.unwrap_or(String::from("None")));
-
-    let id = Id::from_raw(&url).unwrap();
-    let video = Video::from_id(id.into_owned()).await.unwrap();
-
-    let mut file = std::fs::File::create("output.json").unwrap();
-
-    writeln!(file, "{{\"{}\": [", video.title()).unwrap();
-    for stream in video.streams().iter() {
-        let str = serde_json::to_string_pretty(stream).unwrap();
-        writeln!(file, "{},", str).unwrap();
-    }
-    writeln!(file, "]\n}}").unwrap();
-    let audio_url = video
-        .streams()
-        .iter()
-        .filter(|stream| {
-            if !stream.codecs.contains(&String::from("opus")) {
-                return false;
-            }
-            Some(stream);
-
-            return true;
-        })
-        .max_by(|a, b| {
-            let audio_qulaity_a = a.audio_quality.unwrap();
-            let audio_qulaity_b = b.audio_quality.unwrap();
-
-            audio_qulaity_a.cmp(&audio_qulaity_b)
-        })
-        .unwrap();
-
-    let url = audio_url.signature_cipher.url.to_owned();
-    println!("{}", url);
-
-    // Download cool file
-    let client = reqwest::Client::new();
-    let response = client.get(url).send().await.unwrap();
-
-    // if !response.status().is_success() {
-    //     panic!("dqsdqd");
-    // }
-
-    let content_length = response.content_length().unwrap_or(0);
-    let mut total_written = 0;
-    let title = format!("{}{OUT_EXTENSIONS}", video.title().to_ascii_lowercase());
-
-    println!("content_length: {content_length}");
-
-    let mut buffer = Vec::<u8>::new();
-    buffer.reserve(content_length as usize);
-
-    let mut str = response.bytes_stream();
-    println!("");
-    while let Some(item) = str.next().await {
-        let chunk = item.unwrap();
-        total_written += chunk.len() as u64;
-        buffer.extend(chunk);
-
-        // dest.write_all(&chunk).unwrap();
-
-        if content_length > 0 {
-            let progress = (total_written as f64 / content_length as f64) * 100.0;
-
-            let mut lock = stdout().lock();
-            write!(
-                lock,
-                "\rProgress: {:.2}% ({} bytes)",
-                progress, total_written
-            )
-            .unwrap();
-            let _ = io::stdout().flush();
-        }
-    }
-    print!("\n");
-
-    println!("Data has been written");
-
-    let output_path = PathBuf::from(title);
+fn main() -> Result<()> {
+    // User inputs
+    let input_path = PathBuf::from(format!("{PATH}.weba"));
+    let output_path = PathBuf::from(format!("{PATH}{OUT_EXTENSIONS}"));
     let filter = "anull".to_owned();
 
     println!("Start");
 
+    let mut buffer = read_file_to_buffer(&input_path.to_str().unwrap())?;
+
     println!("Checkpoint 1");
 
-    let mut ictx = input_buffer(&mut buffer).unwrap();
+    let mut ictx = input_buffer(&mut buffer)?;
 
     println!("Checkpoint 4");
 
-    let mut octx = ffmpeg_next::format::output(&output_path).unwrap();
-    let mut transcoder = transcoder(&mut ictx, &mut octx, &output_path, &filter).unwrap();
+    let mut octx = ffmpeg_next::format::output(&output_path)?;
+    let mut transcoder = transcoder(&mut ictx, &mut octx, &output_path, &filter)?;
 
     octx.set_metadata(ictx.metadata().to_owned());
-    octx.write_header().unwrap();
+    octx.write_header()?;
 
     for (stream, mut packet) in ictx.packets() {
         if stream.index() == transcoder.stream {
@@ -405,4 +300,6 @@ async fn main() {
     transcoder.receive_and_process_encoded_packets(&mut octx);
 
     octx.write_trailer().unwrap();
+
+    Ok(())
 }
