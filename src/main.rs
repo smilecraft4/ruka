@@ -1,5 +1,9 @@
 #![allow(unused)]
 
+mod cli;
+mod error;
+mod prelude;
+
 extern crate ffmpeg_next as ffmpeg;
 
 use clap::Parser;
@@ -13,24 +17,10 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Parser, Debug)]
-#[command(name = "smilecraft4", version = "0.0.1", about = "youtube to mp3")]
-struct Args {
-    #[arg(short, long)]
-    url: String,
-    #[arg(short, long)]
-    output: String,
-    #[arg(short, long)]
-    metadata: Option<String>,
-    #[arg(short, long)]
-    cover: Option<String>,
-}
-
 use ffmpeg::{codec, ffi::AVFormatContext, filter, format, frame};
 use std::{ffi::c_void, io::Read, path::Path};
 
-// TODO: Expose the format
-const OUT_EXTENSIONS: &str = ".wav";
+const OUTPUT_DEFAULT_FORMAT: &str = ".wav";
 
 fn filter(
     spec: &str,
@@ -283,34 +273,27 @@ fn read_file_to_buffer(file_path: &str) -> Result<Vec<u8>> {
 
 #[tokio::main]
 async fn main() {
-    let args = Args::parse();
+    // Parse CLI arguments
 
-    // TODO: Remove link
-    let url = args.url;
-    let mut output_path = PathBuf::from(args.output);
-    if output_path.extension().is_none() {
-        output_path.set_extension("wav");
-    }
+    // Dowload the audio from the audio link
 
-    println!(
-        "Downloading {} and saving it to \"{}\"",
-        url,
-        output_path.to_str().unwrap()
-    );
-    // println!("Hello {}", args.metadata.unwrap_or(String::from("None")));
-    // println!("Hello {}", args.cover.unwrap_or(String::from("None")));
+    // Dowload the image from the cover link
 
-    let id = Id::from_raw(&url).unwrap();
+    // Transcode the audio to requested format
+
+    // Write Metadata to the stream
+
+    let args = cli::parse_command_args();
+    let mut param = cli::Parameter::from_args(&args).unwrap();
+
+    let id = Id::from_raw(&param.url.as_str()).unwrap();
     let video = Video::from_id(id.into_owned()).await.unwrap();
 
-    // let mut file = std::fs::File::create("output.json").unwrap();
+    if param.output == std::path::PathBuf::new() {
+        let p = std::path::PathBuf::from(format!("./{}.wav", video.title().to_ascii_lowercase()));
+        param.output = p
+    }
 
-    // writeln!(file, "{{\"{}\": [", video.title()).unwrap();
-    // for stream in video.streams().iter() {
-    //     let str = serde_json::to_string_pretty(stream).unwrap();
-    //     writeln!(file, "{},", str).unwrap();
-    // }
-    // writeln!(file, "]\n}}").unwrap();
     let audio_url = video
         .streams()
         .iter()
@@ -330,8 +313,14 @@ async fn main() {
         })
         .unwrap();
 
+    println!(
+        "Downloading {} and saving it to \"{}\"",
+        param.url.as_str(),
+        param.get_output()
+    );
+
     let url = audio_url.signature_cipher.url.to_owned();
-    // println!("{}", url);
+    println!("{}", url);
 
     // Download cool file
     let client = reqwest::Client::new();
@@ -343,7 +332,11 @@ async fn main() {
 
     let content_length = response.content_length().unwrap_or(0);
     let mut total_written = 0;
-    let title = format!("{}{OUT_EXTENSIONS}", video.title().to_ascii_lowercase());
+    let title = format!(
+        "{}{}",
+        video.title().to_ascii_lowercase(),
+        OUTPUT_DEFAULT_FORMAT
+    );
 
     println!("Dowload size: {:.3}mb", content_length as f32 / 1e6);
 
@@ -384,10 +377,10 @@ async fn main() {
 
     // println!("Checkpoint 4");
 
-    create_dir_all(output_path.parent().unwrap());
+    create_dir_all(&param.output.parent().unwrap());
 
-    let mut octx = ffmpeg_next::format::output(&output_path).unwrap();
-    let mut transcoder = transcoder(&mut ictx, &mut octx, &output_path, &filter).unwrap();
+    let mut octx = ffmpeg_next::format::output(&param.output).unwrap();
+    let mut transcoder = transcoder(&mut ictx, &mut octx, &param.output, &filter).unwrap();
 
     octx.set_metadata(ictx.metadata().to_owned());
     octx.write_header().unwrap();

@@ -4,8 +4,6 @@ version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-# $env:FFMPEG_PKG_CONFIG_PATH="C:\src\vcpkg\installed\x64-windows-static-md\lib\pkgconfig\"
-
 
 [dependencies]
 thiserror = "1"
