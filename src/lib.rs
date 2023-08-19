@@ -2,4 +2,5 @@
 
 pub mod cli;
 pub mod error;
+pub mod metadata;
 pub mod prelude;

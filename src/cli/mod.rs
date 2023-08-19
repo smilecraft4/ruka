@@ -33,7 +33,7 @@ impl Parameter {
 }
 
 pub fn parse_command_args() -> clap::ArgMatches {
-    let arg_url = clap::Arg::new("url")
+    let url_arg = clap::Arg::new("url")
         .short('u')
         .long("url")
         .help("youtube url from where to dowload the audio")
@@ -55,11 +55,11 @@ pub fn parse_command_args() -> clap::ArgMatches {
         .action(clap::ArgAction::SetTrue)
         .required(false);
 
-    let args = clap::Command::new("Ruka-dl")
+    let args = clap::Command::new("ruka")
         .version("1.0.0") // TODO: use the cargo.toml
         .author("smilecraft4") // TODO: use the cargo.toml
         .about("Download song directly from youtbe to your pc, with medata and more")
-        .args(vec![arg_url, output_arg, debug_arg])
+        .args(vec![url_arg, output_arg, debug_arg])
         .get_matches();
 
     args
