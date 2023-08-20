@@ -9,4 +9,10 @@ pub enum Error {
 
     #[error(transparent)]
     IO(#[from] std::io::Error),
+
+    #[error(transparent)]
+    Rustube(#[from] rustube::Error),
+
+    #[error(transparent)]
+    Reqwest(#[from] reqwest::Error),
 }
