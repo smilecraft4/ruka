@@ -1,18 +1,19 @@
-use crate::error::Result;
+pub mod config_parser;
 
-use std::str::FromStr;
+use crate::error::Result;
+use std::{collections::HashMap, str::FromStr};
 
 #[derive(Debug)]
 pub struct Parameter {
-    pub url: String,
+    pub audio_url: String,
+    pub cover_url: Option<String>,
     pub output: Option<std::path::PathBuf>,
     pub debug: bool,
+    pub metadata: Option<HashMap<String, String>>,
 }
 
 impl Parameter {
     pub fn from_args(args: &clap::ArgMatches) -> Result<Parameter> {
-        let url = args.get_one::<String>("url").unwrap().to_owned();
-
         let output = match args.get_one::<String>("output") {
             Some(p) => {
                 let mut output = std::path::PathBuf::from_str(p).unwrap();
@@ -28,7 +29,33 @@ impl Parameter {
 
         let debug = args.get_flag("debug");
 
-        Ok(Parameter { url, output, debug })
+        // TODO: if "--config" file is on disable --url
+
+        let config_path = args.get_one::<String>("config");
+        if config_path.is_some() {
+            let config_path = config_path.unwrap().to_owned();
+
+            let config = crate::cli::config_parser::ConfigJson::from_file(config_path)?;
+            let mut param: Parameter = config.into();
+            param.output = output;
+            param.debug = debug;
+
+            println!("Config mode");
+
+            return Ok(param);
+        } else {
+            let url = args.get_one::<String>("url").unwrap().to_owned();
+
+            println!("Simple mode");
+
+            Ok(Parameter {
+                audio_url: url,
+                cover_url: None,
+                output,
+                debug,
+                metadata: None,
+            })
+        }
     }
 }
 
@@ -37,8 +64,7 @@ pub fn parse_command_args() -> clap::ArgMatches {
         .short('u')
         .long("url")
         .help("youtube url from where to dowload the audio")
-        .value_name("URL")
-        .required(true);
+        .value_name("URL");
 
     let output_arg = clap::Arg::new("output")
         .short('o')
@@ -55,11 +81,16 @@ pub fn parse_command_args() -> clap::ArgMatches {
         .action(clap::ArgAction::SetTrue)
         .required(false);
 
+    let config_arg = clap::Arg::new("config")
+        .short('c')
+        .long("config")
+        .value_hint(clap::ValueHint::FilePath);
+
     let args = clap::Command::new("ruka")
         .version("1.0.0") // TODO: use the cargo.toml
         .author("smilecraft4") // TODO: use the cargo.toml
         .about("Download song directly from youtbe to your pc, with medata and more")
-        .args(vec![url_arg, output_arg, debug_arg])
+        .args(vec![url_arg, output_arg, debug_arg, config_arg])
         .get_matches();
 
     args
