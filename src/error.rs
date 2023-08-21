@@ -15,4 +15,7 @@ pub enum Error {
 
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
+
+    #[error(transparent)]
+    FFmpeg(#[from] ffmpeg_next::Error),
 }

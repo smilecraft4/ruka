@@ -1,11 +1,11 @@
-use crate::error::{Error, Result};
-use std::{collections::HashMap, io::Read, str::FromStr};
+use crate::error::*;
+use std::{collections::HashMap, io::Read, path::PathBuf, str::FromStr};
 
 #[derive(Debug)]
 pub struct Parameter {
     pub audio_url: String,
     pub cover_url: Option<String>,
-    pub output: Option<std::path::PathBuf>,
+    pub output: std::path::PathBuf,
     pub debug: bool,
     pub metadata: Option<HashMap<String, String>>,
 }
@@ -20,9 +20,9 @@ impl Parameter {
                     output.set_extension("mp3");
                 }
 
-                Some(output)
+                output
             }
-            None => None,
+            None => panic!("no output"),
         };
 
         let debug = args.get_flag("debug");
@@ -70,7 +70,7 @@ pub fn parse_command_args() -> clap::ArgMatches {
         .help("Path to the downloaded audio")
         .value_hint(clap::ValueHint::FilePath)
         .value_name("FILE")
-        .required(false);
+        .default_value("./song/dowload");
 
     let debug_arg = clap::Arg::new("debug")
         .short('d')
@@ -136,38 +136,38 @@ impl Into<Parameter> for ConfigJson {
         let source = self.metadata;
 
         if source.title.is_some() {
-            metadata.insert("title".to_string(), source.title.unwrap());
+            metadata.insert("TIT2".to_string(), source.title.unwrap());
         }
         if source.artists.is_some() {
             match convert_vector_to_string(source.artists.unwrap()) {
-                Some(val) => metadata.insert("artist".to_string(), val),
+                Some(val) => metadata.insert("TPE1".to_string(), val),
                 None => None,
             };
         }
         if source.album.is_some() {
-            metadata.insert("album".to_string(), source.album.unwrap());
+            metadata.insert("TALB".to_string(), source.album.unwrap());
         }
         if source.album_artists.is_some() {
             match convert_vector_to_string(source.album_artists.unwrap()) {
-                Some(val) => metadata.insert("album_artist".to_string(), val),
+                Some(val) => metadata.insert("TPE2".to_string(), val),
                 None => None,
             };
         }
         if source.year.is_some() {
-            metadata.insert("year".to_string(), source.year.unwrap());
+            metadata.insert("TYER".to_string(), source.year.unwrap());
         }
         if source.genres.is_some() {
             match convert_vector_to_string(source.genres.unwrap()) {
-                Some(val) => metadata.insert("genres".to_string(), val),
+                Some(val) => metadata.insert("TCON".to_string(), val),
                 None => None,
             };
         }
         if source.track_number.is_some() {
-            metadata.insert("track_number".to_string(), source.track_number.unwrap());
+            metadata.insert("TRCK".to_string(), source.track_number.unwrap());
         }
         if source.composer.is_some() {
             match convert_vector_to_string(source.composer.unwrap()) {
-                Some(val) => metadata.insert("composer".to_string(), val),
+                Some(val) => metadata.insert("TCOM".to_string(), val),
                 None => None,
             };
         }
@@ -175,7 +175,7 @@ impl Into<Parameter> for ConfigJson {
         Parameter {
             audio_url: self.audio_url,
             cover_url: Some(self.cover_url),
-            output: None,
+            output: PathBuf::new(),
             debug: false,
             metadata: Some(metadata),
         }
@@ -191,7 +191,7 @@ fn convert_vector_to_string(values: Vec<String>) -> Option<String> {
 
     convert.push_str(format!("{}", values[0]).as_str());
     for val in values.iter().skip(1) {
-        convert.push_str(format!(", {}", val).as_str());
+        convert.push_str(format!("; {}", val).as_str());
     }
 
     Some(convert)

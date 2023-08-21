@@ -1,13 +1,14 @@
 {
-    "audio_url": "https://youtu.be/okVTSehE414",
+    "audio_url": "https://www.youtube.com/watch?v=LLWZOF7DiVg",
     "cover_url": "https://i.scdn.co/image/ab67616d0000b2738c475998f5005d0a339b1f0d",
     "metadata": {
-        "title": "I WANT",
-        "artists": ["IVE"],
-        "album_artist": [""],
+        "title": "FLOWER",
+        "artists": [""],
+        "ablum": "ME",
+        "album_artist": ["JISOO"],
         "year": "2023",
         "genres": ["example", "fun", "electric", "kpop"],
         "track_number": "1",
-        "composers": [""]
+        "composers": ["24", "VVN & KUSH"]
     }
 }

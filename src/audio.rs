@@ -48,6 +48,7 @@ impl Dowloader for YoutubeDowloader {
                 print!("\rProgress {:.2}% ({:.3})mb", progress, total_written / 1e6);
                 stdout().flush()?;
             }
+            println!("");
 
             return Ok(bytes);
         }
