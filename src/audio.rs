@@ -57,7 +57,7 @@ impl Dowloader for YoutubeDowloader {
     }
 }
 
-pub async fn dowload_cover_art(url: String) -> Result<Vec<u8>> {
+pub async fn dowload_cover_art(url: String) -> Result<(Vec<u8>, String)> {
     let response = reqwest::get(url).await?;
 
     // Check status
@@ -79,7 +79,7 @@ pub async fn dowload_cover_art(url: String) -> Result<Vec<u8>> {
                 println!("Detected image extension: {}", extension);
                 let bytes = response.bytes().await?;
 
-                Ok(bytes.to_vec())
+                Ok((bytes.to_vec(), String::from(extension)))
             } else {
                 Err(Error::Generic(format!(
                     "Cover art URL does not point to an image."

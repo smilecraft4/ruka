@@ -3,12 +3,38 @@
     "cover_url": "https://i.scdn.co/image/ab67616d0000b2738c475998f5005d0a339b1f0d",
     "metadata": {
         "title": "FLOWER",
-        "artists": [""],
-        "ablum": "ME",
-        "album_artist": ["JISOO"],
-        "year": "2023",
-        "genres": ["example", "fun", "electric", "kpop"],
-        "track_number": "1",
-        "composers": ["24", "VVN & KUSH"]
+        "comment": "",
+        "description": "",
+        "artist": [
+            "none",
+            "random"
+        ],
+        "album_artist": [
+            "JISOO"
+        ],
+        "album": "ME",
+        "date": "2023",
+        "track": "1",
+        "TRACKTOTAL": "2",
+        "disc": "1",
+        "genre": [
+            "electric",
+            "kpop"
+        ],
+        "grouping": "",
+        "composer": [
+            "24",
+            "VVN & KUSH"
+        ],
+        "producer": [
+            "teddy",
+            "maybe"
+        ],
+        "publisher": [
+            "me",
+            "another guy"
+        ],
+        "copyright": "",
+        "author_url": "https://www.youtube.com/watch?v=LLWZOF7DiVg"
     }
 }
