@@ -1,33 +1,47 @@
+use core::panic;
 use std::{
+    collections::{HashMap, HashSet},
     io::{stdout, Write},
     str::FromStr,
 };
 
 use crate::error::{Error, Result};
 use async_trait::async_trait;
+use reqwest::Client;
+use rustube::Video;
 
 #[async_trait]
 pub trait Dowloader {
-    async fn dowload(url: String) -> Result<Vec<u8>>;
+    async fn dowload(video: Video) -> Result<Vec<u8>>;
 }
 
 pub struct YoutubeDowloader;
 
 #[async_trait]
 impl Dowloader for YoutubeDowloader {
-    async fn dowload(url: String) -> Result<Vec<u8>> {
-        let url = reqwest::Url::from_str(url.as_str()).unwrap();
-        let video = rustube::VideoFetcher::from_url(&url)?
-            .fetch()
-            .await?
-            .descramble()?;
-
+    async fn dowload(video: Video) -> Result<Vec<u8>> {
         let best_audio = match video.best_audio() {
             Some(stream) => stream,
             None => return Err(Error::Generic(format!("Failed to get a audio file"))),
         };
 
-        let mut response = reqwest::get(best_audio.signature_cipher.url.clone()).await?;
+        let mut tries = 0;
+
+        let mut response = loop {
+            tries += 1;
+
+            match reqwest::get(best_audio.signature_cipher.url.clone()).await {
+                Ok(response) => break Ok(response),
+                Err(e) => {
+                    if tries == 3 {
+                        break Err(Error::Generic(format!(
+                            "Failed to get response from {}, [error] {}",
+                            best_audio.signature_cipher.url, e
+                        )));
+                    }
+                }
+            };
+        }?;
 
         if response.status().is_success() {
             let content_length = response.content_length();

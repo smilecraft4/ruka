@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use ruka::{audio::*, cli::*, converter::convert_to_mp3, error::*};
-use std::{fs, io::Write, path::Path};
+use std::{fs, io::Write, path::Path, str::FromStr};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -11,7 +11,13 @@ async fn main() -> anyhow::Result<()> {
     fs::create_dir_all(&param.output.parent().unwrap());
 
     let (cover, extension) = dowload_cover_art(param.cover_url.unwrap()).await?;
-    let mut audio = YoutubeDowloader::dowload(param.audio_url).await?;
+
+    let url = reqwest::Url::from_str(param.audio_url.as_str()).unwrap();
+    let video = rustube::VideoFetcher::from_url(&url)?
+        .fetch()
+        .await?
+        .descramble()?;
+    let mut audio = YoutubeDowloader::dowload(video).await?;
 
     let mut temp_audio = tempfile::NamedTempFile::new()?;
     temp_audio.write_all(&audio)?;
