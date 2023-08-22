@@ -6,15 +6,15 @@ use async_trait::async_trait;
 use rustube::Video;
 
 #[async_trait]
-pub trait Dowloader {
-    async fn dowload(video: Video) -> Result<Vec<u8>>;
+pub trait Downloader {
+    async fn download(video: Video) -> Result<Vec<u8>>;
 }
 
-pub struct YoutubeDowloader;
+pub struct YoutubeDownloader;
 
 #[async_trait]
-impl Dowloader for YoutubeDowloader {
-    async fn dowload(video: Video) -> Result<Vec<u8>> {
+impl Downloader for YoutubeDownloader {
+    async fn download(video: Video) -> Result<Vec<u8>> {
         let best_audio = match video.best_audio() {
             Some(stream) => stream,
             None => return Err(Error::Generic(format!("Failed to get a audio file"))),

@@ -17,7 +17,7 @@ async fn main() -> anyhow::Result<()> {
         .fetch()
         .await?
         .descramble()?;
-    let mut audio = YoutubeDowloader::dowload(video).await?;
+    let mut audio = YoutubeDownloader::download(video).await?;
 
     let mut temp_audio = tempfile::NamedTempFile::new()?;
     temp_audio.write_all(&audio)?;

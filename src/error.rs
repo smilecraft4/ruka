@@ -15,4 +15,7 @@ pub enum Error {
 
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
+
+    #[error(transparent)]
+    Regex(#[from] regex::Error),
 }
