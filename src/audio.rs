@@ -1,13 +1,8 @@
-use core::panic;
-use std::{
-    collections::{HashMap, HashSet},
-    io::{stdout, Write},
-    str::FromStr,
-};
+use std::io::{stdout, Write};
 
 use crate::error::{Error, Result};
 use async_trait::async_trait;
-use reqwest::Client;
+
 use rustube::Video;
 
 #[async_trait]

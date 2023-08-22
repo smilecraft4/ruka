@@ -1,12 +1,14 @@
 use std::{io::Write, path::PathBuf, str::FromStr};
 
-use clap::Arg;
+use clap::{Arg, ValueHint};
 use regex::Regex;
 use reqwest;
 use ruka::audio::Dowloader;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // TODO: Add a HashSet to track the progress of the playlist to avoid restarting from zero
+
     let command = clap::Command::new("ruka")
         .version("1.0.0") // TODO: use the cargo.toml
         .author("smilecraft4") // TODO: use the cargo.toml
@@ -16,24 +18,33 @@ async fn main() -> anyhow::Result<()> {
                 .short('p')
                 .long("playlist")
                 .help("Link to the youtube playlist")
+                .value_name("URL")
                 .required(true),
             Arg::new("format")
                 .short('f')
                 .long("format")
                 .default_value("mp3")
                 .help("output format of the audio"),
+            Arg::new("output")
+                .short('o')
+                .long("output")
+                .default_value("./download/playlist")
+                .value_hint(ValueHint::DirPath)
+                .value_name("PATH")
+                .help("Directory where tracks will be saved"),
         ])
         .get_matches();
 
     let playlist_url = command.get_one::<String>("playlist").unwrap().clone();
     let audio_format = command.get_one::<String>("format").unwrap().clone();
+    let output_string = command.get_one::<String>("output").unwrap().clone();
 
     let response = reqwest::get(playlist_url).await?;
     let body = response.text().await?;
 
+    let output_dir = PathBuf::from_str(output_string.as_str())?;
     let rex = Regex::new(r#""playlistVideoRenderer":\{"videoId":"(.*?)""#)?;
 
-    let output_dir = PathBuf::from_str("./download/playlist")?;
     std::fs::create_dir_all(&output_dir)?;
 
     for capture in rex.captures_iter(&body) {
@@ -49,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
 
         let output = PathBuf::from_str(
             format!(
-                "{}/{}.{}",
+                "{}{}.{}",
                 output_dir.as_path().to_str().unwrap(),
                 video.title(),
                 audio_format
