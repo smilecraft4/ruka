@@ -5,6 +5,18 @@ use std::{fs, io::Write, path::Path, str::FromStr};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Read CLI args
+
+    // Get Info about the download mode (custom, direct, playlist)
+    //
+
+    // TODO: Support playlist mode
+    // TODO: Support track mode
+    // TODO: Support config mode
+
+    // TODO: Fetch info about album
+    // TODO: Fetch info about track
+
     let args = parse_command_args();
     let param = Parameter::from_args(&args)?;
 

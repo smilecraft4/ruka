@@ -3,7 +3,6 @@ use std::{
     io::{BufRead, Write},
     path::PathBuf,
     str::FromStr,
-    time::Duration,
 };
 
 use clap::{Arg, ValueHint};
@@ -14,7 +13,6 @@ use ruka::{
     error::Result,
     prelude::Error,
 };
-use rustube::Stream;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -76,7 +74,7 @@ async fn main() -> Result<()> {
             progress
         }
         Err(_) => {
-            println!("starting from beginning because a progress file was not found");
+            println!("Starting from beginning because a progress file was not found");
             HashSet::<String>::new()
         }
     };
@@ -121,7 +119,7 @@ async fn download_urls(
         }
         .descramble()?;
 
-        let output = format!("{}/{}.{}", dir, video.title(), format);
+        let output = format!("{}/{}.{}", dir, video.title().to_ascii_lowercase(), format);
         let output = match PathBuf::from_str(&output) {
             Ok(out) => out,
             Err(e) => return Err(Error::Generic(format!("Failed to get directory: {}", e))),

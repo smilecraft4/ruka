@@ -5,7 +5,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/target/debug/examples/playlist.exe",
-            "args": ["-p", "https://youtube.com/playlist?list=PLTpD-lAtY-jDOGHA0DpNeE4KRPpotoRIX"],
+            "args": ["-p", "https://youtube.com/playlist?list=OLAK5uy_kEMQL0LZeSPAhsJqUAZPeCCcgVcIezoJQ"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],

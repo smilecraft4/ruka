@@ -54,7 +54,12 @@ impl Downloader for YoutubeDownloader {
                 total_written += chunk_size;
 
                 let progress = (total_written / content_length.unwrap() as f64) * 100.0;
-                print!("\rProgress {:.2}% ({:.3})mb", progress, total_written / 1e6);
+                print!(
+                    "\rProgress {:.2}% ({:.3} mb/{:.3} mb)",
+                    progress,
+                    total_written / 1e6,
+                    content_length.unwrap() as f64 / 1e6
+                );
                 stdout().flush()?;
             }
             println!("");
