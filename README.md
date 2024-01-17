@@ -1,11 +1,6 @@
 # Ruka
 
 <!-- TODO -->
-
-<p align="center">
-    <img src="https://www.nautiljon.com/images/perso/00/85/sarashina_ruka_19558.webp" alt="Ruka"/>
-</p>
-
 Ruka is a simple CLI tool to download song and album/playlist from urls.
 
 - [ ] Download audio file from url
